@@ -1,13 +1,17 @@
 import os
 import requests
-from notion_client import Client
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 DATABASE_ID = os.environ["NOTION_DATABASE_ID"]
 DATA_GO_KR_KEY = os.environ["DATA_GO_KR_KEY"]  # Decoding 키
 YEAR = int(os.environ.get("TARGET_YEAR", "2026"))
 
-notion = Client(auth=NOTION_TOKEN)
+NOTION_API = "https://api.notion.com/v1"
+NOTION_HEADERS = {
+    "Authorization": f"Bearer {NOTION_TOKEN}",
+    "Notion-Version": "2022-06-28",
+    "Content-Type": "application/json",
+}
 
 
 def get_holidays(year):
@@ -38,15 +42,36 @@ def get_holidays(year):
 
 
 def existing_dates():
-    result = notion.databases.query(
-        database_id=DATABASE_ID,
-        filter={"property": "구분", "select": {"equals": "공휴일"}},
+    res = requests.post(
+        f"{NOTION_API}/databases/{DATABASE_ID}/query",
+        headers=NOTION_HEADERS,
+        json={"filter": {"property": "구분", "select": {"equals": "공휴일"}}},
+        timeout=10,
     )
+    res.raise_for_status()
+    results = res.json()["results"]
     return {
         r["properties"]["날짜"]["date"]["start"]
-        for r in result["results"]
+        for r in results
         if r["properties"]["날짜"]["date"]
     }
+
+
+def create_page(name, date):
+    res = requests.post(
+        f"{NOTION_API}/pages",
+        headers=NOTION_HEADERS,
+        json={
+            "parent": {"database_id": DATABASE_ID},
+            "properties": {
+                "이름": {"title": [{"text": {"content": name}}]},
+                "날짜": {"date": {"start": date}},
+                "구분": {"select": {"name": "공휴일"}},
+            },
+        },
+        timeout=10,
+    )
+    res.raise_for_status()
 
 
 def main():
@@ -55,14 +80,7 @@ def main():
         if h["date"] in already:
             print(f"스킵(이미 있음): {h['date']} {h['name']}")
             continue
-        notion.pages.create(
-            parent={"database_id": DATABASE_ID},
-            properties={
-                "이름": {"title": [{"text": {"content": h["name"]}}]},
-                "날짜": {"date": {"start": h["date"]}},
-                "구분": {"select": {"name": "공휴일"}},
-            },
-        )
+        create_page(h["name"], h["date"])
         print(f"추가됨: {h['date']} {h['name']}")
 
 
