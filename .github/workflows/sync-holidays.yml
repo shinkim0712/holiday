@@ -1,0 +1,27 @@
+name: Sync KR Holidays to Notion
+
+on:
+  schedule:
+    - cron: "0 0 1 1 *"   # 매년 1월 1일 00:00 UTC 자동 실행
+  workflow_dispatch:        # 수동 실행 버튼도 활성화
+    inputs:
+      target_year:
+        description: "동기화할 연도"
+        required: false
+        default: "2026"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python sync_holidays.py
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          TARGET_YEAR: ${{ github.event.inputs.target_year || '2026' }}
