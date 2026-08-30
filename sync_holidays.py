@@ -16,7 +16,7 @@ NOTION_HEADERS = {
 
 def get_holidays(year):
     holidays = []
-    url = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo"
+    url = "https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo"
     for month in range(1, 13):
         params = {
             "serviceKey": DATA_GO_KR_KEY,
