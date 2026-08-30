@@ -48,6 +48,8 @@ def existing_dates():
         json={"filter": {"property": "구분", "select": {"equals": "공휴일"}}},
         timeout=10,
     )
+    if not res.ok:
+        print(f"Notion 오류 응답: {res.text}")
     res.raise_for_status()
     results = res.json()["results"]
     return {
@@ -71,6 +73,8 @@ def create_page(name, date):
         },
         timeout=10,
     )
+    if not res.ok:
+        print(f"Notion 오류 응답: {res.text}")
     res.raise_for_status()
 
 
