@@ -66,7 +66,7 @@ def create_page(name, date):
         json={
             "parent": {"database_id": DATABASE_ID},
             "properties": {
-                "이름": {"title": [{"text": {"content": name}}]},
+                "title": {"title": [{"text": {"content": name}}]},
                 "날짜": {"date": {"start": date}},
                 "구분": {"select": {"name": "공휴일"}},
             },
